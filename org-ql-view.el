@@ -908,6 +908,7 @@ current buffer.  Otherwise BUFFERS-FILES is returned unchanged."
                                                      "date"
                                                      "deadline"
                                                      "priority"
+                                                     "reverse"
                                                      "scheduled"
                                                      "todo")
                                                nil nil (when org-ql-view-sort

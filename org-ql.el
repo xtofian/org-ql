@@ -264,7 +264,7 @@ returns nil or non-nil."
     (pcase sort
       (`nil items)
       ((guard (cl-loop for elem in (-list sort)
-                       always (memq elem '(date deadline scheduled todo priority random))))
+                       always (memq elem '(date deadline scheduled todo priority random reverse))))
        ;; Default sorting functions
        (org-ql--sort-by items (-list sort)))
       ;; Sort by user-given comparator.
@@ -1575,6 +1575,7 @@ of the line after the heading."
   "Return ITEMS sorted by PREDICATES.
 PREDICATES is a list of one or more sorting methods, including:
 `deadline', `scheduled', and `priority'."
+  ;; FIXME: Update docstring with other sorting methods.
   ;; MAYBE: Use macrolet instead of flet.
   (cl-flet* ((sorter (symbol)
                      (pcase symbol
@@ -1598,11 +1599,17 @@ PREDICATES is a list of one or more sorting methods, including:
                                                                              ;; Put at end of list if not found
                                                                              (1+ (length org-todo-keywords-1)))))))
                                      (-flatten-n 1 (-map #'cdr sorted-groups)))))
-    (cl-loop for pred in (nreverse predicates)
-             do (setq items (if (eq pred 'todo)
-                                (sort-by-todo-keyword items)
-                              (-sort (sorter pred) items)))
-             finally return items)))
+    (let ((reverse-last-p (eq (-last-item predicates) 'reverse)))
+      (when reverse-last-p
+        (setf predicates (butlast predicates)))
+      (cl-loop for pred in (reverse predicates)
+               do (setq items (pcase pred
+                                ('todo (sort-by-todo-keyword items))
+                                ('reverse (nreverse items))
+                                (_ (-sort (sorter pred) items))))
+               finally return (if reverse-last-p
+                                  (nreverse items)
+                                items)))))
 
 ;; TODO: Rewrite date sorters using `ts'.
 
