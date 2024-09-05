@@ -75,6 +75,9 @@
 (defvar org-ql-block-header nil
   "Optional string overriding default header in `org-ql-block' agenda blocks.")
 
+(defvar org-ql-block-element-transform nil
+  "Optional function to transform each element before rendering in `org-ql-block' agenda blocks.")
+
 ;;;; Customization
 
 (defgroup org-ql-search nil
@@ -265,6 +268,7 @@ automatically from the query."
       ;; `org-agenda-multi' is bound non-nil, in which case `org-agenda-finalize' does nothing.
       ;; But we do call `org-agenda-finalize-entries', which allows `org-super-agenda' to work.
       (->> items
+           (-map (or org-ql-block-element-transform #'identity))
            (-map #'org-ql-view--format-element)
            org-agenda-finalize-entries
            insert)
